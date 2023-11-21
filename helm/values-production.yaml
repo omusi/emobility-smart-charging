@@ -1,0 +1,5 @@
+image:
+  sha: "sha256:69e2a38342490a4a263c23ee27a7a12c86f0d8e2ea90d0352f44736bf1ecefd5"
+
+ingress:
+  host: 'vev-iq.com'

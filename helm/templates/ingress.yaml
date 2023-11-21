@@ -1,0 +1,52 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: emobility
+  labels:
+    {{- include "labels" . | nindent 4 }}
+  annotations:
+    alb.ingress.kubernetes.io/group.name: emobility
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/success-codes: '200'
+    alb.ingress.kubernetes.io/healthcheck-path: /health-check
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
+    alb.ingress.kubernetes.io/load-balancer-attributes: access_logs.s3.enabled={{- if .Values.ingress.access_logs_bucket }}true{{- else }}false{{- end }},access_logs.s3.bucket={{ .Values.ingress.access_logs_bucket }},access_logs.s3.prefix=emobility
+    kubernetes.io/ingress.class: alb
+spec:
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /api/v1/OptimizeChargingProfiles
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Chart.Name }}
+                port:
+                  number: 8080
+          - path: /api/v1/OptimizeChargingProfiles/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Chart.Name }}
+                port:
+                  number: 8080
+    - host: "*.{{ .Values.ingress.host }}"
+      http:
+        paths:
+          - path: /api/v1/OptimizeChargingProfiles
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Chart.Name }}
+                port:
+                  number: 8080
+          - path: /api/v1/OptimizeChargingProfiles/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Chart.Name }}
+                port:
+                  number: 8080

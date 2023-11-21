@@ -1,0 +1,6 @@
+apiVersion: v2
+name: smart-charging
+description: Provide Smart Charging to better manage the chargers energy consumption.
+type: application
+version: 0.1.0
+appVersion: "pr-1"
