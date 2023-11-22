@@ -3,14 +3,12 @@ on:
   push:
     branches:
       - master
-      - master-qa
     tags:
       # Match semver pattern
       - v[0-9]+.[0-9]+.[0-9]+
   pull_request:
     branches:
       - master
-      - master-qa
 
 env:
   REGISTRY: ghcr.io
@@ -19,7 +17,8 @@ env:
 jobs:
   build-and-push:
     # Only build on pull requests if the branch starts with `build/` to allow for testing docker images without merging but not for every PR
-    if: github.event_name != 'pull_request' || startsWith(github.head_ref, 'build/')
+    if: (github.event_name != 'pull_request' || startsWith(github.head_ref, 'build/')) && !StartsWith(github.event.head_commit.message, '[robot]')
+   
     runs-on: ubuntu-latest
     
     permissions:
@@ -71,4 +70,4 @@ jobs:
     - uses: stefanzweifel/git-auto-commit-action@v5
       if: github.ref == 'refs/heads/master'
       with:
-        commit_message: "[skip ci] Update Helm Chart docker image SHA"
+        commit_message: "[robot]  Update Helm Chart docker image SHA"
