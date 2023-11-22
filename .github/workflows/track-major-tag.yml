@@ -1,0 +1,35 @@
+name: Track major tag version
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'  # Trigger on semver tags like v1.2.3
+
+permissions:
+  contents: write
+
+jobs:
+  tag-major-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Extract major version
+        id: extract_version
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          MAJOR_VERSION=$(echo $TAG_NAME | cut -d '.' -f 1)
+          echo "Major version: $MAJOR_VERSION"
+          echo "::set-output name=MAJOR_VERSION::$MAJOR_VERSION"
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "devops.admin@vev.com"
+          git config --local user.name "DevOps"
+
+      - name: Create or Update Major Version Tag
+        run: |
+          MAJOR_VERSION=${{ steps.extract_version.outputs.MAJOR_VERSION }}
+          git tag -fa $MAJOR_VERSION -m "Update major version tag to $MAJOR_VERSION"
+          git push origin $MAJOR_VERSION --force

@@ -3,14 +3,12 @@ on:
   push:
     branches:
       - master
-      - master-qa
     tags:
       # Match semver pattern
       - v[0-9]+.[0-9]+.[0-9]+
   pull_request:
     branches:
       - master
-      - master-qa
 
 env:
   REGISTRY: ghcr.io
@@ -19,15 +17,18 @@ env:
 jobs:
   build-and-push:
     # Only build on pull requests if the branch starts with `build/` to allow for testing docker images without merging but not for every PR
-    if: github.event_name != 'pull_request' || startsWith(github.head_ref, 'build/')
+    if: (github.event_name != 'pull_request' || startsWith(github.head_ref, 'build/')) && !StartsWith(github.event.head_commit.message, '[robot]')
+   
     runs-on: ubuntu-latest
     
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.ACCESS_TOKEN }}
     - name: Log in to the Container registry
       uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
       with:
@@ -45,7 +46,8 @@ jobs:
           type=ref,event=pr
           type=semver,pattern={{version}}
 
-    - name: Build and push Docker image
+    - id: build-and-push
+      name: Build and push Docker image
       uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
       with:
         context: .
@@ -53,3 +55,19 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+
+    - name: Update Helm Chart docker SHA
+      if: github.ref == 'refs/heads/master'
+      env:
+        VERSION: v4.35.2
+        BINARY: yq_linux_amd64
+      run: |
+        wget https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY} -O /usr/bin/yq && chmod +x /usr/bin/yq
+        yq e '.image.sha = "${{ steps.build-and-push.outputs.digest }}"' -i helm/values-dev.yaml
+        yq e '.image.sha = "${{ steps.build-and-push.outputs.digest }}"' -i helm/values-qa.yaml
+        yq e '.image.sha = "${{ steps.build-and-push.outputs.digest }}"' -i helm/values-production.yaml
+
+    - uses: stefanzweifel/git-auto-commit-action@v5
+      if: github.ref == 'refs/heads/master'
+      with:
+        commit_message: "[robot]  Update Helm Chart docker image SHA"

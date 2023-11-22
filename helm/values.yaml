@@ -1,0 +1,12 @@
+image:
+  repository: ghcr.io/vev-platform-services/emobility-smart-charging
+  name: vev-smart-charging
+
+deployment:
+  replicas: 2
+  memory:
+    request: "1Gi"
+    limit: "1Gi"
+  cpu:
+    request: 1
+    limit: 1
