@@ -1,5 +1,4 @@
 image:
-  sha: "sha256:69e2a38342490a4a263c23ee27a7a12c86f0d8e2ea90d0352f44736bf1ecefd5"
-
+  sha: "sha256:931a03a4e8c34083b5050de2aadfbdcd65064c7d7405fbf0c5aaa65a0af228c9"
 ingress:
   host: 'qa-vev-iq.com'
